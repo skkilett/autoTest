@@ -8,8 +8,9 @@ export const apiClient = {
       .send(body)
       .set('Content-Type', 'application/json')
       .set('Accept', 'application/json')
-      .set(headers)
-      .buffer(true)  // <-- Это поможет обрабатывать gzip-сжатый контент
+      .set('Accept-Encoding', 'identity')
+      .set(headers) 
+      .buffer(true)
       .timeout(5000);
   },
 };

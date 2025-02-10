@@ -1,13 +1,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../../src/app.module';
-import { registerUser, loginUser } from '../utils/auth.helpers';
+import { AutomationPipeline } from '../core/pipeline';
+import { registerUser, loginUser } from '../actions/auth.actions';
+import { createCharacter } from '../actions/character.actions';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
-  let playFabId: string;
-  let entityToken: string;
-  let titleId: string; // Переменная объявлена, но не была присвоена
+  let pipeline: AutomationPipeline;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -16,20 +16,16 @@ describe('AuthController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+
+    pipeline = new AutomationPipeline();
   });
 
-  it('should register a new user', async () => {
-    const userData = await registerUser();
-    playFabId = userData.playFabId;
-    entityToken = userData.entityToken;
-    titleId = userData.titleId; 
-  });
-
-  it('should log in a user', async () => {
-    if (!playFabId || !entityToken || !titleId) {
-      throw new Error("Missing required data from registration!");
-    }
-    await loginUser(playFabId, entityToken, titleId);
+  it('should register, log in, and create a character', async () => {
+    await pipeline
+      .addStep(registerUser)
+      .addStep(loginUser)
+      .addStep(createCharacter)
+      .run();
   });
 
   afterAll(async () => {
