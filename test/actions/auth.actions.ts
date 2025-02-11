@@ -25,8 +25,6 @@ export const registerUser = async (context: UserContext) => {
     throw new Error("Registration failed: Missing PlayFabId, SessionTicket, or TitleId!");
   }
 
-  console.log(`Extracted TitleId: ${response.body.data.EntityToken.Entity.Id}`);
-
   context.update({
     playFabId: response.body.data.PlayFabId,
     sessionTicket: response.body.data.SessionTicket,

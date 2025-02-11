@@ -1,12 +1,10 @@
 export class UserContext {
-    playFabId: string = '';
-    entityToken: string = '';
-    titleId: string = '';
-    sessionTicket: string = '';
-    stripeSubscriptionId: string = '';
+  playFabId: string = '';
+  sessionTicket: string = '';
+  titleId: string = '';
+  xsollaToken: string = ''; 
   
-    update(data: Partial<UserContext>) {
-      Object.assign(this, data);
-    }
+  update(data: Partial<UserContext>) {
+    Object.assign(this, data);
   }
-  
+}
