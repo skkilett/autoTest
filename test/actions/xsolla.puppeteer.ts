@@ -1,52 +1,74 @@
 import puppeteer from 'puppeteer';
 import { UserContext } from '../core/user.context';
-import { writeFile } from 'fs/promises';
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const performXsollaPayment = async (context: UserContext) => {
   if (!context.xsollaToken) {
     throw new Error('Missing Xsolla token for payment!');
   }
 
-  console.log(`Starting payment process for token: ${context.xsollaToken}`);
-
-  const browser = await puppeteer.launch({ headless: false }); // Для отладки лучше отключить headless-режим
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
   try {
-    // Переходим по ссылке Xsolla Pay Station с токеном
     const paymentUrl = `https://sandbox-secure.xsolla.com/paystation2/?access_token=${context.xsollaToken}`;
-    await page.goto(paymentUrl, { waitUntil: 'networkidle2' });
+    await page.goto(paymentUrl, { waitUntil: 'domcontentloaded' });
 
-    // Ожидаем появления формы оплаты и вводим данные тестовой карты
-    await page.waitForSelector('input[name="card_number"]', { timeout: 6000000 });
-    await page.type('input[name="card_number"]', '4111 1111 1111 1111'); // Номер тестовой карты
-    await page.type('input[name="card_month"]', '12/40'); // Дата истечения
-    await page.type('input[name="cvv"]', '123'); // CVV
-    await page.type('input[name="email"]', 'ivan.stupnytsky@ganzillagames.com'); // CVV
-    const frames = page.frames();
-for (const frame of frames) {
-  console.log('Frame URL:', frame.url());
-}
-
-await page.evaluate(() => {
-    const button = document.querySelector('.is-subscription-purchase x-pay-button > button');
-    if (button) {
-        button.click();
-    } else {
-        console.error('Кнопка не найдена внутри evaluate.');
+    // Проверяем наличие поля ввода номера карты с коротким таймаутом
+    let paymentFormVisible = true;
+    try {
+      await page.waitForSelector('input[name="card_number"]', { visible: true, timeout: 5000 });
+    } catch (error) {
+      paymentFormVisible = false;
     }
-});
-    
-    
 
+    if (paymentFormVisible) {
+      console.log("Payment form is visible, filling in inputs");
+      await page.type('input[name="card_number"]', '4111 1111 1111 1111');
+      await page.type('input[name="card_month"]', '12/40');
+      await page.type('input[name="cvv"]', '123');
+      await page.type('input[name="email"]', 'qq@gmail.com');
+      await page.waitForSelector('input#x-checkbox-control-input-allowRecurrentSubscription', { visible: true, timeout: 15000 });
+      await page.click('input#x-checkbox-control-input-allowRecurrentSubscription');
+      await delay(2000);
+      await page.waitForSelector('x-pay-button.pay-button', { visible: true, timeout: 15000 });
+      await page.click('x-pay-button.pay-button');
+    } else {
+      console.log("Payment form inputs not found, skipping input steps");
+    }
 
-    await page.waitForNavigation({ waitUntil: 'networkidle2' });
+    // Аналогично проверяем наличие поля ZIP
+    let zipFieldVisible = true;
+    try {
+      await page.waitForSelector('input[name="zip"]', { visible: true, timeout: 5000 });
+    } catch (error) {
+      zipFieldVisible = false;
+    }
 
-    // Проверяем успешность оплаты
-    const successElement = await page.$('.payment-success');
-    if (successElement) {
-      const successMessage = await page.evaluate(el => el.textContent, successElement);
-      if (successMessage?.includes('Payment successful')) {
+    if (zipFieldVisible) {
+      console.log("Zip field is visible, filling it in");
+      await page.type('input[name="zip"]', '43434');
+      await delay(2000);
+      await page.waitForSelector('x-pay-button', { visible: true, timeout: 15000 });
+      await page.click('x-pay-button');
+    } else {
+      console.log("Zip field not found, skipping zip step");
+    }
+
+    // Пытаемся дождаться перехода, но если навигация не происходит, ловим ошибку и продолжаем
+    try {
+      await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
+    } catch (navError) {
+      console.warn("Navigation did not occur within timeout, proceeding to check for success message.");
+    }
+
+    await delay(2000);
+    await page.waitForSelector('h2.title-text.ng-star-inserted', { visible: true, timeout: 15000 });
+    const successHeader = await page.$('h2.title-text.ng-star-inserted');
+    if (successHeader) {
+      const headerText = await page.evaluate(el => el.textContent, successHeader);
+      if (headerText?.trim() === 'Subscription activated') {
         console.log('Payment completed successfully!');
       } else {
         throw new Error('Payment failed or success message not found.');
@@ -54,9 +76,9 @@ await page.evaluate(() => {
     } else {
       throw new Error('Payment success element not found.');
     }
-    
   } catch (error) {
     console.error('Error during payment process:', error);
+    throw error;
   } finally {
     await browser.close();
   }

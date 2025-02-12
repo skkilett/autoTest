@@ -29,11 +29,12 @@ describe('AuthController (e2e)', () => {
       .addStep(createCharacter)
       .addStep(getXsollaSubscriptionToken) 
       .addStep(performXsollaPayment)
+      .addStep(performXsollaPayment)
       .run();
 
     const context = pipeline.getContext();
     console.log('Pipeline completed successfully with context:', context);
-  }, 15000);
+  }, 25000);
 
   afterAll(async () => {
     await app.close();
