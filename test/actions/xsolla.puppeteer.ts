@@ -15,7 +15,6 @@ export const performXsollaPayment = async (context: UserContext) => {
     const paymentUrl = `https://sandbox-secure.xsolla.com/paystation2/?access_token=${context.xsollaToken}`;
     await page.goto(paymentUrl, { waitUntil: 'domcontentloaded' });
 
-    // Проверяем наличие поля ввода номера карты с коротким таймаутом
     let paymentFormVisible = true;
     try {
       await page.waitForSelector('input[name="card_number"]', { visible: true, timeout: 5000 });
@@ -35,10 +34,10 @@ export const performXsollaPayment = async (context: UserContext) => {
       await page.waitForSelector('x-pay-button.pay-button', { visible: true, timeout: 15000 });
       await page.click('x-pay-button.pay-button');
     } else {
+      await page.click('x-pay-button');
       console.log("Payment form inputs not found, skipping input steps");
     }
 
-    // Аналогично проверяем наличие поля ZIP
     let zipFieldVisible = true;
     try {
       await page.waitForSelector('input[name="zip"]', { visible: true, timeout: 5000 });
@@ -56,14 +55,13 @@ export const performXsollaPayment = async (context: UserContext) => {
       console.log("Zip field not found, skipping zip step");
     }
 
-    // Пытаемся дождаться перехода, но если навигация не происходит, ловим ошибку и продолжаем
     try {
       await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 15000 });
     } catch (navError) {
       console.warn("Navigation did not occur within timeout, proceeding to check for success message.");
     }
 
-    await delay(2000);
+    await delay(2500);
     await page.waitForSelector('h2.title-text.ng-star-inserted', { visible: true, timeout: 15000 });
     const successHeader = await page.$('h2.title-text.ng-star-inserted');
     if (successHeader) {

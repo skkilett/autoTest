@@ -1,29 +1,57 @@
+// pipeline.ts
 import { UserContext } from './user.context';
+
+export type StepFunction = (context: UserContext) => Promise<void>;
+
+export interface PipelineStep {
+  step: StepFunction;
+  timeout?: number; // таймаут для данного шага (в мс)
+}
 
 export class AutomationPipeline {
   private context: UserContext;
-  private steps: ((context: UserContext) => Promise<void>)[] = [];
+  private steps: PipelineStep[] = [];
 
   constructor() {
     this.context = new UserContext();
   }
 
-  addStep(step: (context: UserContext) => Promise<void>) {
-    this.steps.push(step);
+
+  addStep(step: StepFunction, timeout?: number): this {
+    this.steps.push({ step, timeout });
     return this;
   }
 
-  async run() {
-    for (const step of this.steps) {
-      try {
+
+  async run(): Promise<void> {
+    for (const { step, timeout } of this.steps) {
+      if (timeout) {
+        await this.runStepWithTimeout(step, timeout);
+      } else {
         await step(this.context);
-      } catch (error) {
-        console.error(`Step failed: ${error.message}`);
       }
     }
   }
 
-  getContext() {
+  private async runStepWithTimeout(step: StepFunction, timeout: number): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error(`Step timed out after ${timeout}ms`));
+      }, timeout);
+
+      step(this.context)
+        .then(() => {
+          clearTimeout(timer);
+          resolve();
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
+  }
+
+  getContext(): UserContext {
     return this.context;
   }
 }
