@@ -3,6 +3,7 @@ export class UserContext {
   sessionTicket: string = '';
   titleId: string = '';
   xsollaToken: string = ''; 
+  characterId: string = ''; 
   
   update(data: Partial<UserContext>) {
     Object.assign(this, data);

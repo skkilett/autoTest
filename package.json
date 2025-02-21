@@ -27,6 +27,7 @@
     "puppeteer": "^24.2.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "stripe": "^17.6.0",
     "superagent": "^10.1.1"
   },
   "devDependencies": {

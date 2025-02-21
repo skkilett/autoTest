@@ -1,11 +1,10 @@
-// pipeline.ts
 import { UserContext } from './user.context';
 
 export type StepFunction = (context: UserContext) => Promise<void>;
 
 export interface PipelineStep {
   step: StepFunction;
-  timeout?: number; // таймаут для данного шага (в мс)
+  timeout?: number; 
 }
 
 export class AutomationPipeline {

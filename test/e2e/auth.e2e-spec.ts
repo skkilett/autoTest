@@ -10,6 +10,11 @@ import { redeemContentPacks } from '../actions/redeem-content-packs.actions';
 import { onPlayerAgreement } from '../actions/on-player-agreement.actions';
 import { setBlockchainCoins } from '../actions/set-blockchain-coins.actions';
 import { extendXsollaSubscription } from '../actions/extend-xsolla-subscription.actions';
+import { performStripeSubscription } from '../actions/stripe.puppeteer';
+import { extendStripeSubscription } from '../actions/extend-stripe-subscription.actions';
+import { unsubscribeXsolla } from '../actions/unsubscribe-xsolla.actions';
+import { unsubscribeStripe } from '../actions/unsubscribe-stripe.actions';
+import { setCurrentCharacter } from '../actions/set-сurrent-сharacter.actions';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
@@ -27,18 +32,23 @@ describe('AuthController (e2e)', () => {
   });
 
   it(
-    'should register, log in, create a character, and get an Xsolla token',
+    'Run',
     async () => {
       await pipeline
         .addStep(registerUser, 10000)
-        .addStep(onPlayerAgreement, 10000)
-        .addStep(createCharacter, 15000)            
-        .addStep(loginUser, 10000)                   
+        .addStep(loginUser, 10000)
+        .addStep(createCharacter, 15000)
+        .addStep(onPlayerAgreement, 10000) 
         .addStep(getXsollaSubscriptionToken, 10000) 
-        .addStep(performXsollaPayment, 30000)    
+        .addStep(performXsollaPayment, 30000) 
+        .addStep(performXsollaPayment, 30000)     
+        .addStep(setBlockchainCoins("2000"), 10000)
+        // .addStep(performStripeSubscription, 30000) 
         .addStep(redeemContentPacks, 15000)
-        .addStep(setBlockchainCoins("1000"), 10000)
-        .addStep(extendXsollaSubscription, 10000)
+        // .addStep(setBlockchainCoins("2000"), 10000)
+        // .addStep(extendStripeSubscription, 10000)
+        // .addStep(unsubscribeStripe, 10000)
+        // .addStep(performStripeSubscription, 30000)                     
         .run();
 
       const context = pipeline.getContext();

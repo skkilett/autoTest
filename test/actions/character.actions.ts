@@ -28,7 +28,9 @@ export const createCharacter = async (context: UserContext) => {
   );
 
   console.log("CreateCharacter Response:", response.body);
-
+  context.update({
+    characterId: response.body.CharacterId,
+  });
   if (!response.body || response.body.error) {
     throw new Error(`Failed to create character: ${response.body?.errorMessage || "Unknown error"}`);
   }
