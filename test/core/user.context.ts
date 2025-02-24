@@ -4,7 +4,9 @@ export class UserContext {
   titleId: string = '';
   xsollaToken: string = ''; 
   characterId: string = ''; 
-  
+  username: string = '';
+  password: string = '';
+
   update(data: Partial<UserContext>) {
     Object.assign(this, data);
   }

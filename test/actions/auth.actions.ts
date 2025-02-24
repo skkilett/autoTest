@@ -5,9 +5,9 @@ import { createBasePayload } from '../helpers/payload.helper';
 
 
 export const registerUser = async (context: UserContext) => {
-  const timestamp = Date.now();
-  const uniqueUsername = `${timestamp}`;
-  const uniqueEmail = `${timestamp}@gmail.com`;
+  const timestamp: number = Date.now();
+  const uniqueUsername: string = `${timestamp}`;
+  const uniqueEmail: string = `${timestamp}@gmail.com`;
 
   console.log(`Registering user: ${uniqueEmail}`);
 
@@ -29,6 +29,8 @@ export const registerUser = async (context: UserContext) => {
     playFabId: response.body.data.PlayFabId,
     sessionTicket: response.body.data.SessionTicket,
     titleId: response.body.data.EntityToken.Entity.Id, 
+    username: uniqueUsername,
+    password: "123123123",
   });
 };
 
